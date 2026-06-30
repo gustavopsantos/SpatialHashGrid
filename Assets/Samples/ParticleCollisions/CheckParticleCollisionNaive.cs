@@ -5,15 +5,11 @@ namespace Samples.ParticleCollisions
 {
     public class CheckParticleCollisionNaive : ICheckParticleCollision
     {
-        private readonly IReadOnlyList<Vector3> _positions;
+        private readonly IReadOnlyList<Vector2> _positions;
 
-        public CheckParticleCollisionNaive(IReadOnlyList<Vector3> positions)
+        public CheckParticleCollisionNaive(IReadOnlyList<Vector2> positions)
         {
             _positions = positions;
-        }
-
-        public void OnParticlesCreated()
-        {
         }
 
         public void OnParticlesUpdated()

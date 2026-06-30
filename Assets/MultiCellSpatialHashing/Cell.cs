@@ -7,7 +7,7 @@ namespace MultiCellSpatialHashing
     {
         public event Action<T> OnObjectEnteredCell;
         public event Action<T> OnObjectLeftCell;
-        private readonly SparseSet<T> _objects = new(initialCapacity: 64);
+        private readonly SparseSet<T> _objects = new(initialCapacity: 1024);
 
         public void Clear()
         {

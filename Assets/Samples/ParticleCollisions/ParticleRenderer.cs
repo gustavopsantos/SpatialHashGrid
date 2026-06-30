@@ -15,10 +15,10 @@ namespace Samples.ParticleCollisions
         private ComputeBuffer _colorBuffer;
         private ComputeBuffer _argsBuffer;
 
-        public void Init(Vector3[] positions, Color[] colors)
+        public void Init(Vector2[] positions, Color[] colors)
         {
             // Position buffer
-            _positionBuffer = new ComputeBuffer(positions.Length, sizeof(float) * 3); // sizeof Vector3
+            _positionBuffer = new ComputeBuffer(positions.Length, sizeof(float) * 2); // sizeof Vector2
             _positionBuffer.SetData(positions);
             _particleMaterial.SetBuffer(PositionBuffer, _positionBuffer);
 
@@ -41,7 +41,7 @@ namespace Samples.ParticleCollisions
             _argsBuffer.SetData(args);
         }
 
-        public void UpdatePositions(Vector3[] positions)
+        public void UpdatePositions(Vector2[] positions)
         {
             _positionBuffer.SetData(positions);
         }

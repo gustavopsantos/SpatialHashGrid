@@ -8,14 +8,25 @@ namespace MultiCellSpatialHashing
 {
     public class MultiCellSpatialHash2D<T>
     {
-        private readonly float _cellSize;
-        private readonly Dictionary<T, GridArea> _occupiedCellsPerObject = new(); // Merge value into Entry/EntryInfo
-        private readonly Dictionary<T, Bounds> _boundsPerObject = new(); // Merge value into Entry/EntryInfo 
-        private readonly Dictionary<(int, int), Cell<T>> _cells = new();
+        private readonly float _inverseCellSize;
+        private readonly Dictionary<T, GridArea> _occupiedCellsPerObject = new(capacity: 1024); // Merge value into Entry/EntryInfo
+        private readonly Dictionary<T, Bounds> _boundsPerObject = new(capacity: 1024); // Merge value into Entry/EntryInfo 
+        private readonly Dictionary<(int, int), Cell<T>> _cells = new(capacity: 1024);
 
-        public MultiCellSpatialHash2D(float cellSize)
+        public MultiCellSpatialHash2D(Bounds worldBounds, float cellSize)
         {
-            _cellSize = cellSize;
+            _inverseCellSize = 1f / cellSize;
+
+            var area = GetGridArea(worldBounds);
+
+            for (var y = area.MinY; y <= area.MaxY; y++)
+            {
+                for (var x = area.MinX; x <= area.MaxX; x++)
+                {
+                    var cellId = (x, y);
+                    _cells[cellId] = new Cell<T>();
+                }
+            }
         }
 
         public void Clear()
@@ -39,11 +50,12 @@ namespace MultiCellSpatialHashing
                 {
                     for (var x = area.MinX; x <= area.MaxX; x++)
                     {
-                        var cell = GetOrCreateCell(x, y);
+                        var cellId = (x, y);
+                        var cell = _cells[cellId];
                         cell.AddObject(obj);
                     }
                 }
-                
+
                 _boundsPerObject.Add(obj, bounds);
             }
             else
@@ -82,7 +94,8 @@ namespace MultiCellSpatialHashing
                         continue;
                     }
 
-                    var cell = GetOrCreateCell(x, y);
+                    var cellId = (x, y);
+                    var cell = _cells[cellId];
                     cell.AddObject(obj);
                 }
             }
@@ -103,7 +116,7 @@ namespace MultiCellSpatialHashing
                         cell.RemoveObject(obj);
                     }
                 }
-                
+
                 _boundsPerObject.Remove(obj);
             }
         }
@@ -118,16 +131,15 @@ namespace MultiCellSpatialHashing
                 for (var x = area.MinX; x <= area.MaxX; x++)
                 {
                     var cellId = (x, y);
-                    if (_cells.TryGetValue(cellId, out var cell)) // Don't create cells when querying
+                    var cell = _cells[cellId];
+                    var objs = cell.GetAllObjects();
+                    
+                    for (var i = 0; i < objs.Count; i++)
                     {
-                        var objs = cell.GetAllObjects();
-                        for (var i = 0; i < objs.Count; i++)
+                        var obj = objs[i];
+                        if (visited.Add(obj) && _boundsPerObject[obj].Intersects(bounds))
                         {
-                            var obj = objs[i];
-                            if (visited.Add(obj) && _boundsPerObject[obj].Intersects(bounds))
-                            {
-                                result.Add(obj);
-                            }
+                            result.Add(obj);
                         }
                     }
                 }
@@ -142,22 +154,11 @@ namespace MultiCellSpatialHashing
             {
                 for (var x = area.MinX; x <= area.MaxX; x++)
                 {
-                    var cell = GetOrCreateCell(x, y);
+                    var cellId = (x, y);
+                    var cell = _cells[cellId];
                     result.Add(cell);
                 }
             }
-        }
-
-        public Cell<T> GetOrCreateCell(int x, int y)
-        {
-            var cellId = (x, y);
-
-            if (!_cells.TryGetValue(cellId, out var cell))
-            {
-                _cells[cellId] = cell = new Cell<T>();
-            }
-
-            return cell;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -168,10 +169,10 @@ namespace MultiCellSpatialHashing
 
             return new GridArea
             {
-                MinX = (int)Math.Floor(min.x / _cellSize),
-                MaxX = (int)Math.Floor(max.x / _cellSize),
-                MinY = (int)Math.Floor(min.y / _cellSize),
-                MaxY = (int)Math.Floor(max.y / _cellSize),
+                MinX = (int)Math.Floor(min.x * _inverseCellSize),
+                MaxX = (int)Math.Floor(max.x * _inverseCellSize),
+                MinY = (int)Math.Floor(min.y * _inverseCellSize),
+                MaxY = (int)Math.Floor(max.y * _inverseCellSize),
             };
         }
     }

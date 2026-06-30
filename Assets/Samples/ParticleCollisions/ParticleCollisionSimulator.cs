@@ -1,3 +1,4 @@
+using System;
 using Samples.ParticleCollisions;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -9,26 +10,28 @@ public class ParticleCollisionSimulator : MonoBehaviour
     [SerializeField] private ParticleRenderer _particleRenderer;
     [SerializeField] private bool _useNaiveCollision;
 
-    private Bounds _simulationBounds;
+    private Bounds _positionBounds;
+    private Bounds _volumeBounds;
 
     private ICheckParticleCollision _checkParticleCollision;
 
     // Particles
-    private Vector3[] _positions;
-    private Vector3[] _velocities;
+    private Vector2[] _positions;
+    private Vector2[] _velocities;
     private Color[] _colors;
 
     private void Start()
     {
-        _positions = new Vector3[_particleCount];
-        _velocities = new Vector3[_particleCount];
+        _positions = new Vector2[_particleCount];
+        _velocities = new Vector2[_particleCount];
         _colors = new Color[_particleCount];
-        _simulationBounds = new Bounds(Vector3.zero, Vector3.one * _simulationSize);
+        _positionBounds = new Bounds(Vector3.zero, Vector2.one * _simulationSize);
+        _volumeBounds = new Bounds(Vector3.zero, Vector2.one * (_simulationSize + 1));
 
         for (var i = 0; i < _particleCount; i++)
         {
-            _positions[i] = GetRandomPositionInsideBounds(_simulationBounds);
-            _velocities[i] = GetRandomVelocity(2);
+            _positions[i] = GetRandomPositionInsideBounds(_positionBounds);
+            _velocities[i] = GetRandomVelocity(1);
             _colors[i] = Random.ColorHSV();
         }
 
@@ -36,14 +39,14 @@ public class ParticleCollisionSimulator : MonoBehaviour
 
         _checkParticleCollision = _useNaiveCollision
             ? new CheckParticleCollisionNaive(_positions)
-            : new CheckParticleCollisionSpatialHashing(_positions);
+            : new CheckParticleCollisionSpatialHashing(_positions, _volumeBounds);
     }
 
     private void Update()
     {
         UpdateParticlePositions();
         UpdateParticleColorsBasedOnCollision();
-        _particleRenderer.Render(in _simulationBounds);
+        _particleRenderer.Render(in _positionBounds);
     }
 
     private void UpdateParticlePositions()
@@ -53,8 +56,8 @@ public class ParticleCollisionSimulator : MonoBehaviour
             ref var position = ref _positions[i];
             ref var velocity = ref _velocities[i];
             position += velocity * Time.deltaTime;
-            var boundsMin = _simulationBounds.min;
-            var boundsMax = _simulationBounds.max;
+            var boundsMin = _positionBounds.min;
+            var boundsMax = _positionBounds.max;
 
             if (position.x < boundsMin.x)
             {
@@ -74,16 +77,6 @@ public class ParticleCollisionSimulator : MonoBehaviour
             if (position.y > boundsMax.y)
             {
                 velocity.y = -Mathf.Abs(velocity.y);
-            }
-
-            if (position.z < boundsMin.z)
-            {
-                velocity.z = +Mathf.Abs(velocity.z);
-            }
-
-            if (position.z > boundsMax.z)
-            {
-                velocity.z = -Mathf.Abs(velocity.z);
             }
         }
 

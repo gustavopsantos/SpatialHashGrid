@@ -18,15 +18,12 @@ Shader "Custom/InstancedIndirect"
         #pragma surface surf Standard fullforwardshadows addshadow
         #pragma target 4.5
 
-
         // Required for DrawMeshInstancedIndirect
         #pragma multi_compile_instancing
         #pragma instancing_options procedural:setup
 
-        sampler2D _MainTex;
-
         #ifdef UNITY_PROCEDURAL_INSTANCING_ENABLED
-        StructuredBuffer<float3> positionBuffer;
+        StructuredBuffer<float2> positionBuffer;
         StructuredBuffer<float4> colorBuffer;
         #endif
 
@@ -43,7 +40,7 @@ Shader "Custom/InstancedIndirect"
         {
             #ifdef UNITY_PROCEDURAL_INSTANCING_ENABLED
 
-            float3 position = positionBuffer[unity_InstanceID];
+            float2 position = positionBuffer[unity_InstanceID];
 
             unity_ObjectToWorld = 0;
             unity_ObjectToWorld._m00 = 1;
@@ -53,12 +50,12 @@ Shader "Custom/InstancedIndirect"
 
             unity_ObjectToWorld._m03 = position.x;
             unity_ObjectToWorld._m13 = position.y;
-            unity_ObjectToWorld._m23 = position.z;
+            unity_ObjectToWorld._m23 = 0;
 
             unity_WorldToObject = unity_ObjectToWorld;
             unity_WorldToObject._m03 = -position.x;
             unity_WorldToObject._m13 = -position.y;
-            unity_WorldToObject._m23 = -position.z;
+            unity_WorldToObject._m23 = 0;
 
             #endif
         }

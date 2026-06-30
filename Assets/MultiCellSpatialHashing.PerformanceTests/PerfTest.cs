@@ -1,6 +1,9 @@
+using System;
+using System.Runtime.CompilerServices;
 using NUnit.Framework;
 using Unity.PerformanceTesting;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace MultiCellSpatialHashing.PerformanceTests
 {
@@ -14,6 +17,7 @@ namespace MultiCellSpatialHashing.PerformanceTests
         [Test, Performance]
         public void Add_10_000_Objects()
         {
+            var worldBounds = new Bounds(Vector2.zero, Vector2.one * WorldSize);
             MultiCellSpatialHash2D<StationaryObject> map = null;
 
             Measure.Method(() => AddObjects(map))
@@ -27,7 +31,7 @@ namespace MultiCellSpatialHashing.PerformanceTests
             void Setup()
             {
                 Random.InitState(0);
-                map = new MultiCellSpatialHash2D<StationaryObject>(CellSize);
+                map = new MultiCellSpatialHash2D<StationaryObject>(worldBounds, CellSize);
             }
 
             void Cleanup()
@@ -61,6 +65,23 @@ namespace MultiCellSpatialHashing.PerformanceTests
 
             // Object
             return new StationaryObject(position, bounds);
+        }
+        
+        private float _inverseCellSize = 1f / 10f;
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public GridArea GetGridArea1(Bounds bounds)
+        {
+            var min = bounds.min;
+            var max = bounds.max;
+
+            return new GridArea
+            {
+                MinX = (int)Math.Floor(min.x * _inverseCellSize),
+                MaxX = (int)Math.Floor(max.x * _inverseCellSize),
+                MinY = (int)Math.Floor(min.y * _inverseCellSize),
+                MaxY = (int)Math.Floor(max.y * _inverseCellSize),
+            };
         }
     }
 }

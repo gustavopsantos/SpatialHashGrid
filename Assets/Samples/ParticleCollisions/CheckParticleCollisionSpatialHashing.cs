@@ -1,23 +1,25 @@
 using System.Collections.Generic;
 using MultiCellSpatialHashing;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.Pool;
 
 namespace Samples.ParticleCollisions
 {
     public class CheckParticleCollisionSpatialHashing : ICheckParticleCollision
     {
-        private readonly IReadOnlyList<Vector3> _positions;
-        private readonly MultiCellSpatialHash2D<int> _spatialHash = new(cellSize: 1f);
+        private readonly IReadOnlyList<Vector2> _positions;
+        private readonly MultiCellSpatialHash2D<int> _spatialHash;
 
-        public CheckParticleCollisionSpatialHashing(IReadOnlyList<Vector3> positions)
+        public CheckParticleCollisionSpatialHashing(IReadOnlyList<Vector2> positions, Bounds worldBounds)
         {
             _positions = positions;
+            _spatialHash = new MultiCellSpatialHash2D<int>(worldBounds, cellSize: 1f);
         
             for (var i = 0; i < _positions.Count; i++)
             {
                 var position = _positions[i];
-                var bounds = new Bounds(position, Vector3.one);
+                var bounds = new Bounds(position, Vector2.one);
                 _spatialHash.AddObject(i, bounds);
             } 
         }

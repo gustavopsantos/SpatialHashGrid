@@ -1,15 +1,22 @@
 ﻿using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace MultiCellSpatialHashing.PerformanceTests
 {
     public class PlayPerfTest : MonoBehaviour
     {
         public const int CellSize = 10;
-        public const int Samples = 10_000;
+        public const int Samples = 1_000;
         public const int WorldSize = 1_000; // 1km x 1km
         public const float WorldExtends = (float)WorldSize / 2;
 
-        private readonly MultiCellSpatialHash2D<StationaryObject> _map = new(CellSize);
+        private MultiCellSpatialHash2D<StationaryObject> _map;
+
+        private void Start()
+        {
+            var worldBounds = new Bounds(Vector2.zero, Vector2.one * WorldSize);
+            _map = new MultiCellSpatialHash2D<StationaryObject>(worldBounds, CellSize);
+        }
 
         private void Update()
         {
