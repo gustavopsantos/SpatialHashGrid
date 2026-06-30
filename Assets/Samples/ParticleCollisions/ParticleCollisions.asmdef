@@ -1,0 +1,16 @@
+{
+    "name": "ParticleCollisions",
+    "rootNamespace": "",
+    "references": [
+        "GUID:2e5644bcb06121549a34b4905370db3d"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
