@@ -8,14 +8,14 @@ namespace MultiCellSpatialHashing
 {
     public class MultiCellSpatialHash2D<T>
     {
-        private readonly float _inverseCellSize;
+        public float CellSize { get; }
         private readonly Dictionary<T, GridArea> _occupiedCellsPerObject = new(capacity: 1024); // Merge value into Entry/EntryInfo
         private readonly Dictionary<T, Bounds> _boundsPerObject = new(capacity: 1024); // Merge value into Entry/EntryInfo 
         private readonly Dictionary<(int, int), Cell<T>> _cells = new(capacity: 1024);
 
         public MultiCellSpatialHash2D(Bounds worldBounds, float cellSize)
         {
-            _inverseCellSize = 1f / cellSize;
+            CellSize = cellSize;
 
             var area = GetGridArea(worldBounds);
 
@@ -24,7 +24,7 @@ namespace MultiCellSpatialHashing
                 for (var x = area.MinX; x <= area.MaxX; x++)
                 {
                     var cellId = (x, y);
-                    _cells[cellId] = new Cell<T>();
+                    _cells[cellId] = new Cell<T>(x, y);
                 }
             }
         }
@@ -169,10 +169,10 @@ namespace MultiCellSpatialHashing
 
             return new GridArea
             {
-                MinX = (int)Math.Floor(min.x * _inverseCellSize),
-                MaxX = (int)Math.Floor(max.x * _inverseCellSize),
-                MinY = (int)Math.Floor(min.y * _inverseCellSize),
-                MaxY = (int)Math.Floor(max.y * _inverseCellSize),
+                MinX = (int)Math.Floor(min.x / CellSize),
+                MaxX = (int)Math.Floor(max.x / CellSize),
+                MinY = (int)Math.Floor(min.y / CellSize),
+                MaxY = (int)Math.Floor(max.y / CellSize),
             };
         }
     }

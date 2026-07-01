@@ -5,9 +5,17 @@ namespace MultiCellSpatialHashing
 {
     public class Cell<T>
     {
+        public readonly int X;
+        public readonly int Y;
         public event Action<T> OnObjectEnteredCell;
         public event Action<T> OnObjectLeftCell;
         private readonly SparseSet<T> _objects = new(initialCapacity: 1024);
+
+        public Cell(int x, int y)
+        {
+            X = x;
+            Y = y;
+        }
 
         public void Clear()
         {

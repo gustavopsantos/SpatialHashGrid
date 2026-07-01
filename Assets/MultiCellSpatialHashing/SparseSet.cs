@@ -8,7 +8,6 @@ namespace MultiCellSpatialHashing
         private readonly Dictionary<T, int> _index = new();
 
         public IReadOnlyList<T> Items => _items;
-        public int Count => _items.Count;
 
         public SparseSet()
         {

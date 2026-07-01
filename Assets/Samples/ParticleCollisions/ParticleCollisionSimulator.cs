@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Samples.ParticleCollisions;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -26,7 +27,7 @@ public class ParticleCollisionSimulator : MonoBehaviour
         _velocities = new Vector2[_particleCount];
         _colors = new Color[_particleCount];
         _positionBounds = new Bounds(Vector3.zero, Vector2.one * _simulationSize);
-        _volumeBounds = new Bounds(Vector3.zero, Vector2.one * (_simulationSize + 1));
+        _volumeBounds = new Bounds(Vector3.zero, Vector2.one * (_simulationSize + 2));
 
         for (var i = 0; i < _particleCount; i++)
         {
@@ -81,11 +82,14 @@ public class ParticleCollisionSimulator : MonoBehaviour
         }
 
         _particleRenderer.UpdatePositions(_positions);
+        var before = Stopwatch.GetTimestamp();
         _checkParticleCollision.OnParticlesUpdated();
+        _updateMapTicks = Stopwatch.GetTimestamp() - before;
     }
 
     private void UpdateParticleColorsBasedOnCollision()
     {
+        var before = Stopwatch.GetTimestamp();
         for (var i = 0; i < _particleCount; i++)
         {
             if (_checkParticleCollision.IsColliding(i))
@@ -97,9 +101,12 @@ public class ParticleCollisionSimulator : MonoBehaviour
                 _colors[i] = Color.black;
             }
         }
-
+        _checkCollisionTicks = Stopwatch.GetTimestamp() - before;
         _particleRenderer.UpdateColors(_colors);
     }
+
+    [SerializeField] private long _checkCollisionTicks;
+    [SerializeField] private long _updateMapTicks;
 
     private static Vector3 GetRandomPositionInsideBounds(in Bounds bounds)
     {

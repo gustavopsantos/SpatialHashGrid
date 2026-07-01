@@ -378,6 +378,8 @@ MonoBehaviour:
   _simulationSize: 64
   _particleRenderer: {fileID: 806597946}
   _useNaiveCollision: 0
+  _checkCollisionTicks: 0
+  _updateMapTicks: 0
 --- !u!4 &1460839414
 Transform:
   m_ObjectHideFlags: 0
