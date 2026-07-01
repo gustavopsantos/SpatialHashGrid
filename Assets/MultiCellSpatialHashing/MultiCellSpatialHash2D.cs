@@ -9,8 +9,7 @@ namespace MultiCellSpatialHashing
     public class MultiCellSpatialHash2D<T>
     {
         public float CellSize { get; }
-        private readonly Dictionary<T, GridArea> _occupiedCellsPerObject = new(capacity: 1024); // Merge value into Entry/EntryInfo
-        private readonly Dictionary<T, Bounds> _boundsPerObject = new(capacity: 1024); // Merge value into Entry/EntryInfo 
+        private readonly Dictionary<T, ObjectInfo> _objects = new(capacity: 1024);
         private readonly Dictionary<(int, int), Cell<T>> _cells = new(capacity: 1024);
 
         public MultiCellSpatialHash2D(Bounds worldBounds, float cellSize)
@@ -31,8 +30,7 @@ namespace MultiCellSpatialHashing
 
         public void Clear()
         {
-            _occupiedCellsPerObject.Clear();
-            _boundsPerObject.Clear();
+            _objects.Clear();
 
             foreach (var cell in _cells.Values)
             {
@@ -42,33 +40,44 @@ namespace MultiCellSpatialHashing
 
         public void AddObject(T obj, Bounds bounds)
         {
-            var area = GetGridArea(bounds);
-
-            if (_occupiedCellsPerObject.TryAdd(obj, area))
-            {
-                for (var y = area.MinY; y <= area.MaxY; y++)
-                {
-                    for (var x = area.MinX; x <= area.MaxX; x++)
-                    {
-                        var cellId = (x, y);
-                        var cell = _cells[cellId];
-                        cell.AddObject(obj);
-                    }
-                }
-
-                _boundsPerObject.Add(obj, bounds);
-            }
-            else
+            if (_objects.ContainsKey(obj))
             {
                 throw new Exception("Object already exists, call UpdateObject() instead.");
             }
+            
+            var area = GetGridArea(bounds);
+            
+            for (var y = area.MinY; y <= area.MaxY; y++)
+            {
+                for (var x = area.MinX; x <= area.MaxX; x++)
+                {
+                    var cellId = (x, y);
+                    var cell = _cells[cellId];
+                    cell.AddObject(obj);
+                }
+            }
+
+            var objectInfo = new ObjectInfo
+            {
+                ObjectBounds = bounds,
+                GridOccupiedArea = area,
+            };
+            
+            _objects.Add(obj, objectInfo);
         }
 
         public void UpdateObject(T obj, Bounds bounds)
         {
-            var oldArea = _occupiedCellsPerObject[obj];
+            var objectInfo = _objects[obj];
+            var oldArea = objectInfo.GridOccupiedArea;
             var newArea = GetGridArea(bounds);
-            var hasIntersection = GridArea.Intersects(oldArea, newArea, out var intersection);
+
+            if (oldArea == newArea)
+            {
+                return;
+            }
+            
+            var hasIntersection = oldArea.Intersects(newArea, out var intersection);
 
             // Exited = old cells except by intersection
             for (var y = oldArea.MinY; y <= oldArea.MaxY; y++)
@@ -100,14 +109,16 @@ namespace MultiCellSpatialHashing
                 }
             }
 
-            _occupiedCellsPerObject[obj] = newArea;
-            _boundsPerObject[obj] = bounds;
+            objectInfo.ObjectBounds = bounds;
+            objectInfo.GridOccupiedArea = newArea;
         }
 
         public void RemoveObject(T obj)
         {
-            if (_occupiedCellsPerObject.Remove(obj, out var area))
+            if (_objects.Remove(obj, out var objectInfo))
             {
+                var area = objectInfo.GridOccupiedArea;
+                
                 for (var y = area.MinY; y <= area.MaxY; y++)
                 {
                     for (var x = area.MinX; x <= area.MaxX; x++)
@@ -116,8 +127,6 @@ namespace MultiCellSpatialHashing
                         cell.RemoveObject(obj);
                     }
                 }
-
-                _boundsPerObject.Remove(obj);
             }
         }
 
@@ -137,7 +146,8 @@ namespace MultiCellSpatialHashing
                     for (var i = 0; i < objs.Count; i++)
                     {
                         var obj = objs[i];
-                        if (visited.Add(obj) && _boundsPerObject[obj].Intersects(bounds))
+                        var objectInfo = _objects[obj];
+                        if (visited.Add(obj) && objectInfo.ObjectBounds.Intersects(bounds))
                         {
                             result.Add(obj);
                         }

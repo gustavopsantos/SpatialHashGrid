@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using MultiCellSpatialHashing;
 using UnityEngine;
-using UnityEngine.Assertions;
 using UnityEngine.Pool;
 
 namespace Samples.ParticleCollisions
@@ -40,19 +39,14 @@ namespace Samples.ParticleCollisions
             var bounds = new Bounds(position, Vector3.one);
             using var pooled = ListPool<int>.Get(out var result);
             _spatialHash.QueryObjects(bounds, result);
-
+            
+            const float particleRadius = 0.5f; // Fixed radius for sample simplicity
+            const float combinedRadius = particleRadius + particleRadius;
+            const float combinedRadiusSqr = combinedRadius * combinedRadius;
+            
             foreach (var i in result)
             {
-                if (i == particleIndex) // Dont check collision against self
-                {
-                    continue;
-                }
-                
-                var otherPosition = _positions[i];
-                const float particleRadius = 0.5f; // Fixed radius for sample simplicity
-                const float combinedRadius = particleRadius + particleRadius;
-
-                if ((position - otherPosition).sqrMagnitude <= combinedRadius * combinedRadius)
+                if (i != particleIndex && (position - _positions[i]).sqrMagnitude <= combinedRadiusSqr)
                 {
                     return true;
                 }

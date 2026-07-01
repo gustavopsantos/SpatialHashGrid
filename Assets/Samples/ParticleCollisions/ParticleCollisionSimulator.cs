@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 using Samples.ParticleCollisions;
 using UnityEngine;
